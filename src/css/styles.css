@@ -57,7 +57,17 @@ li {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0 0 1rem;
+  margin: 0 0 .5rem;
+}
+
+.row-basic {
+  display: flex;
+  align-items: center;
+}
+
+.link {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 select {
