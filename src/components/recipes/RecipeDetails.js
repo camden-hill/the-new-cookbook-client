@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import axios from 'axios'
 import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
 import NavBar from '../NavBar';
 import Footer from '../Footer';
 
@@ -32,9 +33,10 @@ class RecipeDetails extends Component {
       .then(response => {
         this.setState({details: response.data}, () => {
           console.log(this.state);
-        })
-    })
-    .catch(err => console.log(err));
+        });
+        this.setState({servingsCount: response.data.servings});
+      })
+      .catch(err => console.log(err));
   }
 
   getRecipeIngredients() {
@@ -57,9 +59,7 @@ class RecipeDetails extends Component {
     axios.get(`http://localhost:3000/api/steps?filter[where][recipeId][like]=${recipeId}`)
       .then(response => {
         this.setState({steps: response.data}, () => {
-          console.log(this.state);
           if (this.state.steps.length) {
-            console.log(this.state.steps[0].text);
             this.state.steps.map((step) =>
               console.log(step.text)
             )
@@ -98,22 +98,11 @@ class RecipeDetails extends Component {
     }, 1000)
   }
 
-  /** return to render if switching to dropdown
-  const servingsCount = Array.from(Array(9).keys()).slice(1);
-  const servingsCountOptions = servingsCount.map((number) =>
-    <option key={number} value={number}>{number}</option>
-  )
-  *
-  add after <h3>How many...</h3>
-  <select name="how-many-serve">
-    {servingsCountOptions}
-  </select>
-  */
-
   render() {
     return (
       <div>
         <NavBar />
+        <Link to={'/recipes/add'}>Add Recipe</Link>
         <div className="recipe">
           <h1>{this.state.details.name}</h1>
           <div className="row">
