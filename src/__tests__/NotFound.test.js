@@ -1,6 +1,5 @@
-import React, {Component} from 'react';
+import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
-import {Link} from 'react-router-dom';
 import NotFound from '../components/NotFound';
 
 const renderer = new ShallowRenderer();
