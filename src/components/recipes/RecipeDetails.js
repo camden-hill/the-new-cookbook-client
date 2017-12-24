@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 import NavBar from '../NavBar';
 import Footer from '../Footer';
+import moment from 'moment';
 
 import '../../css/recipes.css';
 
@@ -18,6 +19,7 @@ class RecipeDetails extends Component {
       servingsCount: 1
     }
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
   componentWillMount() {
@@ -43,30 +45,18 @@ class RecipeDetails extends Component {
     let recipeId = this.props.match.params.id;
     axios.get(`http://localhost:3000/api/ingredients?filter[where][recipeId][like]=${recipeId}`)
       .then(response => {
-        this.setState({ingredients: response.data}, () => {
-          if (this.state.ingredients.length) {
-            this.state.ingredients.map((ingredient) =>
-              console.log(ingredient.name)
-            )
-          }
-        })
-    })
-    .catch(err => console.log(err));
+        this.setState({ingredients: response.data})
+      })
+      .catch(err => console.log(err));
   }
 
   getRecipeSteps() {
     let recipeId = this.props.match.params.id;
     axios.get(`http://localhost:3000/api/steps?filter[where][recipeId][like]=${recipeId}`)
       .then(response => {
-        this.setState({steps: response.data}, () => {
-          if (this.state.steps.length) {
-            this.state.steps.map((step) =>
-              console.log(step.text)
-            )
-          }
-        })
-    })
-    .catch(err => console.log(err));
+        this.setState({steps: response.data})
+      })
+      .catch(err => console.log(err));
   }
 
   onDelete() {
@@ -87,6 +77,58 @@ class RecipeDetails extends Component {
     });
   }
 
+  handleClick(e) {
+    e.preventDefault();
+    switch(e.target.id) {
+      case 'edit':
+        console.log('edit');
+        break;
+
+      case 'reject':
+        const newRejectedRecipe = {
+          submittedId: this.state.details.id,
+          name: this.state.details.name,
+          author: this.state.details.author,
+          source: this.state.details.source,
+          servings: this.state.details.servings,
+          submittedDate: this.state.details.createdDate,
+          rejectedDate: moment()
+        }
+
+        axios.request({
+          method: 'post',
+          url: 'http://localhost:3000/api/rejecteds/',
+          data: newRejectedRecipe
+        }).catch(err => console.log(err));
+
+        axios.delete(`http://localhost:3000/api/recipes/${this.state.details.id}`)
+        .then(() => {
+          this.props.history.push('/');
+        }).catch(err => console.log(err));
+        break;
+
+      case 'approve':
+        console.log('approve');
+        let approvedRecipe = this.state.details;
+        approvedRecipe['approved'] = true;
+        // this.approveRecipe(approvedRecipe);
+        break;
+
+      default:
+        console.log(e.target.value);
+    }
+  }
+
+  approveRecipe(approvedRecipe) {
+    axios.request({
+      method: 'put',
+      url: `http://localhost:3000/api/recipes/${this.state.details.id}`,
+      data: approvedRecipe
+    }).then(() => {
+      this.props.history.push('/');
+    }).catch(err => console.log(err));
+  }
+
   currentTime() {
     setInterval(() => {
       let date = new Date();
@@ -99,6 +141,9 @@ class RecipeDetails extends Component {
   }
 
   render() {
+    let edit = !this.state.details.approved ? <button type="submit" name="editRecipe" className="submit edit" id="edit" form="editRecipe" onClick={this.handleClick}>Edit</button> : '';
+    let reject = !this.state.details.approved ? <button type="submit" name="rejectRecipe" className="submit reject" id="reject" form="rejectRecipe" onClick={this.handleClick}>Reject</button> : '';
+    let approve = !this.state.details.approved ? <button type="submit" name="approveRecipe" className="submit" id="approve" form="approveRecipe" onClick={this.handleClick}>Approve</button> : '';
     return (
       <div>
         <NavBar />
@@ -121,6 +166,11 @@ class RecipeDetails extends Component {
             <div className="stepBox stepDetails">
               <div className="stepHead">
                 <h6>Start cooking at <span className="underline">{this.state.currentTimeValue}</span></h6>
+                <form id="approveRecipe">
+                  {edit}
+                  {reject}
+                  {approve}
+                </form>
               </div>
               <ul className="steps">
                 {this.state.steps.map((step) =>
