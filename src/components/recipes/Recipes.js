@@ -16,11 +16,9 @@ class Recipes extends Component {
   }
 
   getRecipes() {
-    axios.get('http://localhost:3000/api/recipes')
+    axios.get('http://localhost:3000/api/recipes?filter[where][approved]=true')
       .then(response => {
-        this.setState({recipes: response.data}, () => {
-          console.log(response.data)
-        })
+        this.setState({recipes: response.data})
     })
     .catch(err => console.log(err));
   }

@@ -22,6 +22,10 @@ h1 {
   font-size: 2rem;
 }
 
+h2 {
+  font-weight: 400;
+}
+
 h3 {
   text-align: center;
   font-weight: 400;
@@ -51,6 +55,20 @@ ul {
 
 li {
   margin-top: 1rem;
+}
+
+.container {
+  width: 80%;
+  display: flex;
+  margin: auto;
+  flex-direction: row;
+  justify-content: flex-start;
+  margin-top: 2rem;
+}
+
+.clear {
+  display: block;
+  flex: none;
 }
 
 .row {
@@ -91,6 +109,19 @@ input[type="text"] {
   text-align: left;
   font-size: 1rem;
   box-sizing: border-box;
+}
+
+.submit {
+  padding: .5rem 1rem;
+  border-radius: .1rem;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .1rem;
+  background: #1B8CCF;
+  color: white;
+  outline: none;
+  border: solid 1px black;
+  cursor: pointer;
 }
 
 .h1Input {

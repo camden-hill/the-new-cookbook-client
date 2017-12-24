@@ -14,6 +14,7 @@ class AddRecipe extends Component {
     super(props);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
     this.state = {
       newIngredientText: PropTypes.string,
       newStepText: PropTypes.string,
@@ -31,7 +32,8 @@ class AddRecipe extends Component {
     let ingredients = this.state.ingredients;
     ingredients = [...ingredients, {
       "name": newIngredient,
-      "quantity": "9"
+      "quantity": "",
+      "createdDate": moment()
     }];
     this.setState({ingredients: ingredients}, () => {
       this.refs.newIngredientText.value="";
@@ -45,7 +47,8 @@ class AddRecipe extends Component {
     steps = [...steps, {
       "text": newStep,
       "startTime": currentTime,
-      "duration": 10
+      "duration": 10,
+      "createdDate": moment()
     }];
     this.setState({steps: steps}, () => {
       this.refs.newStepText.value="";
@@ -60,13 +63,15 @@ class AddRecipe extends Component {
     }).then((response) => {
       let recipeId = response.data.id;
       this.state.ingredients.forEach((ingredient) => {
+        /* Split name and quantity algorithmically */
         axios.request({
           method: 'post',
           url: 'http://localhost:3000/api/ingredients/',
           data: {
             "recipeId": response.data.id,
             "name": ingredient.name,
-            "quantity": ingredient.quantity
+            "quantity": ingredient.quantity,
+            "createdDate": ingredient.createdDate
           }
         }).catch(err => console.log(err));
       })
@@ -81,7 +86,8 @@ class AddRecipe extends Component {
             "recipeId": recipeId,
             "text": step.text,
             "startTime": step.startTime,
-            "duration": step.duration
+            "duration": step.duration,
+            "createdDate": step.createdDate
           }
         }).catch(err => console.log(err));
       })
@@ -120,62 +126,81 @@ class AddRecipe extends Component {
       name: this.refs.name.value,
       author: this.refs.author.value,
       source: this.refs.source.value,
-      servings: this.refs.servingsCount.value
+      servings: this.refs.servingsCount.value,
+      approved: false,
+      createdDate: moment()
     }
     this.addRecipe(newRecipe);
+  }
+
+  onKeyDown(e) {
+    console.log(e.target.id);
+    if (e.keyCode === 9) {
+      e.preventDefault();
+      switch (e.target.id) {
+        case 'newIngredientText':
+          this.addIngredient(this.state.newIngredientText);
+          break;
+        case 'newStepText':
+          this.addStep(this.state.newStepText);
+          break;
+        default:
+      }
+    }
   }
 
   render() {
     return (
       <div>
         <NavBar />
-        <div className="recipe">
-          <div className="row">
-            <h5>Add Recipe</h5>
-          </div>
-          <div className="row">
-            <input className="h1Input" type="text" name="name" ref="name" placeholder="Recipe Name" />
-          </div>
-          <div className="row">
-            <input type="text" className="stdInput" name="author" ref="author" placeholder="Author" />
-          </div>
-          <div className="row">
-            <input type="text" className="stdInput" name="source" ref="source" placeholder="Source" />
-          </div>
-          <div className="row">
-            <h3>How many people does this recipe serve?</h3>
-            <input type="text" className="servingsCount" id="servingsCount" name="servingsCount" ref="servingsCount" onChange={this.handleInputChange} />
-          </div>
-          <div className="recipe-container">
-            <div className="ingredientBox">
-              <h4>Ingredients</h4>
-              <ul>
-                {this.state.ingredients.map((ingredient, index) =>
-                  <li key={index} className="ingredient">
-                    {ingredient.name}
-                  </li>
-                )}
-                <li><input className="newIngredient" type="text" name="newIngredientText" id="newIngredientText" ref="newIngredientText" placeholder="Add Ingredient" onChange={this.handleInputChange} /></li>
-                <FontAwesome name="plus-circle" className="icon plusCircle" id="addIngredient" onClick={this.handleClick} />
-              </ul>
+        <form id="addRecipe" onSubmit={this.onSubmit.bind(this)}>
+          <div className="recipe">
+            <div className="row">
+              <h5>Add Recipe</h5>
             </div>
-            <div className="stepBox">
-              <div className="steps">
-                <ul className="stepsText">
-                  {this.state.steps.map((step, index) =>
-                    <li key={index} className="step">
-                      <div className="stepText">{step.text}</div>
+            <div className="row">
+              <input className="h1Input" type="text" name="name" ref="name" placeholder="Recipe Name" autocomplete="off" />
+            </div>
+            <div className="row">
+              <input type="text" className="stdInput" name="author" ref="author" placeholder="Author" autocomplete="off" />
+            </div>
+            <div className="row">
+              <input type="text" className="stdInput" name="source" ref="source" placeholder="Source" autocomplete="off" />
+            </div>
+            <div className="row">
+              <h3>How many people does this recipe serve?</h3>
+              <input type="text" className="servingsCount" id="servingsCount" name="servingsCount" ref="servingsCount" onChange={this.handleInputChange} autocomplete="off" />
+            </div>
+            <div className="recipe-container">
+              <div className="ingredientBox">
+                <h4>Ingredients</h4>
+                <ul>
+                  {this.state.ingredients.map((ingredient, index) =>
+                    <li key={index} className="ingredient">
+                      <p>{ingredient.name}</p><FontAwesome name="minus-circle" className="icon minusCircle" id="removeIngredient" onClick={this.handleClick} />
                     </li>
                   )}
-                  <li className="row-basic"><input className="newStep" type="text" name="newStepText" id="newStepText" ref="newStepText" placeholder="Add Step" onChange={this.handleInputChange} /><FontAwesome name="plus-circle" className="icon plusCircle" id="addStep" onClick={this.handleClick} /></li>
+                  <li className="newIngredientLI"><input className="newIngredient" type="text" name="newIngredientText" id="newIngredientText" ref="newIngredientText" placeholder="Add Ingredient" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autocomplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle" id="addIngredient" onClick={this.handleClick} /></li>
                 </ul>
               </div>
-              <div className="stepFooter">
-                <button type="submit" form="addRecipe" className="submitRecipe submit">Submit</button>
+              <div className="stepBox">
+                <div className="steps">
+                  <ul className="stepsText">
+                    {this.state.steps.map((step, index) =>
+                      <li key={index} className="step">
+                        <div className="stepText">{step.text}</div><FontAwesome name="minus-circle" className="icon minusCircle" id="removeIngredient" onClick={this.handleClick} />
+                      </li>
+                    )}
+                    <li className="row-basic"><input className="newStep" type="text" name="newStepText" id="newStepText" ref="newStepText" placeholder="Add Step" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autocomplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle" id="addStep" onClick={this.handleClick} /></li>
+                  </ul>
+                </div>
+                <div className="stepFooter">
+                  <button type="submit" form="addRecipe" className="submitRecipe submit">Submit</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </form>
         <Footer />
       </div>
     )
