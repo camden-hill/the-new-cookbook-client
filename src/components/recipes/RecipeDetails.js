@@ -16,7 +16,8 @@ class RecipeDetails extends Component {
       ingredients: [],
       steps: [],
       currentTimeValue: PropTypes.string,
-      servingsCount: 1
+      servingsCount: 1,
+      edit: false
     }
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -33,9 +34,7 @@ class RecipeDetails extends Component {
     let recipeId = this.props.match.params.id;
     axios.get(`http://localhost:3000/api/recipes/${recipeId}`)
       .then(response => {
-        this.setState({details: response.data}, () => {
-          console.log(this.state);
-        });
+        this.setState({details: response.data});
         this.setState({servingsCount: response.data.servings});
       })
       .catch(err => console.log(err));
@@ -43,7 +42,9 @@ class RecipeDetails extends Component {
 
   getRecipeIngredients() {
     let recipeId = this.props.match.params.id;
-    axios.get(`http://localhost:3000/api/ingredients?filter[where][recipeId][like]=${recipeId}`)
+    console.log(recipeId);
+    axios.get(`http://localhost:3000/api/ingredients?filter[where][recipeId]=${recipeId}`)
+    // axios.get(`http://localhost:3000/api/ingredients`)
       .then(response => {
         this.setState({ingredients: response.data})
       })
@@ -52,9 +53,11 @@ class RecipeDetails extends Component {
 
   getRecipeSteps() {
     let recipeId = this.props.match.params.id;
-    axios.get(`http://localhost:3000/api/steps?filter[where][recipeId][like]=${recipeId}`)
+    axios.get(`http://localhost:3000/api/steps?filter[where][recipeId]=${recipeId}`)
+    // axios.get(`http://localhost:3000/api/steps`)
       .then(response => {
         this.setState({steps: response.data})
+        this.calculateOffsets();
       })
       .catch(err => console.log(err));
   }
@@ -81,7 +84,7 @@ class RecipeDetails extends Component {
     e.preventDefault();
     switch(e.target.id) {
       case 'edit':
-        console.log('edit');
+        this.setState({edit: true});
         break;
 
       case 'reject':
@@ -108,7 +111,6 @@ class RecipeDetails extends Component {
         break;
 
       case 'approve':
-        console.log('approve');
         let approvedRecipe = this.state.details;
         approvedRecipe['approved'] = true;
         // this.approveRecipe(approvedRecipe);
@@ -135,15 +137,59 @@ class RecipeDetails extends Component {
       let hours = date.getHours()>12 ? date.getHours()-12 : date.getHours();
       hours = hours===0 ? 12 : hours;
       const minutes = date.getMinutes()<10 ? `0${date.getMinutes()}` : date.getMinutes();
-      const currentTimeValue = `${hours}:${minutes}`;
+      let currentTimeValue = `${hours}:${minutes}`;
       this.setState({currentTimeValue: currentTimeValue})
     }, 1000)
+  }
+
+  calculateOffsets() {
+    this.state.steps.map((step) => {
+      console.log(step.startTime);
+    })
   }
 
   render() {
     let edit = !this.state.details.approved ? <button type="submit" name="editRecipe" className="submit edit" id="edit" form="editRecipe" onClick={this.handleClick}>Edit</button> : '';
     let reject = !this.state.details.approved ? <button type="submit" name="rejectRecipe" className="submit reject" id="reject" form="rejectRecipe" onClick={this.handleClick}>Reject</button> : '';
     let approve = !this.state.details.approved ? <button type="submit" name="approveRecipe" className="submit" id="approve" form="approveRecipe" onClick={this.handleClick}>Approve</button> : '';
+
+    let steps = !this.state.edit ? (
+      <ul className="steps">
+        {this.state.steps.map((step) =>
+          <li key={step.id} className="step">
+            <div className="stepInfo">
+              <p>{step.text}</p>
+              <p className="stepDuration">{step.duration} minutes</p>
+            </div>
+          </li>
+        )}
+      </ul>
+    ) : (
+      <ul className="steps">
+        {this.state.steps.map((step) =>
+          <li key={step.id} className="step editStep">
+            <div className="editStepDiv"><input className="editStepInput" value={step.text} /></div>
+          </li>
+        )}
+      </ul>
+    )
+
+    let ingredients = !this.state.edit ? (
+      <ul>
+        {this.state.ingredients.map((ingredient) =>
+          <li key={ingredient.id}><strong>{ingredient.quantity}</strong> {ingredient.name}</li>
+        )}
+      </ul>
+    ) : (
+      <ul className="ingredients">
+        {this.state.ingredients.map((ingredient) =>
+          <li key={ingredient.id} className="ingredient editStep">
+            <div className="editStepDiv"><input className="editStepInput" value={ingredient.name} /></div>
+          </li>
+        )}
+      </ul>
+    )
+
     return (
       <div>
         <NavBar />
@@ -157,11 +203,7 @@ class RecipeDetails extends Component {
           <div className="recipe-container">
             <div className="ingredientBox">
               <h4>Ingredients</h4>
-              <ul>
-                {this.state.ingredients.map((ingredient) =>
-                  <li key={ingredient.id}><strong>{ingredient.quantity}</strong> {ingredient.name}</li>
-                )}
-              </ul>
+              {ingredients}
             </div>
             <div className="stepBox stepDetails">
               <div className="stepHead">
@@ -172,13 +214,7 @@ class RecipeDetails extends Component {
                   {approve}
                 </form>
               </div>
-              <ul className="steps">
-                {this.state.steps.map((step) =>
-                  <li key={step.id} className="step">
-                    <div className="stepText">{step.text}</div>
-                  </li>
-                )}
-              </ul>
+              {steps}
             </div>
           </div>
         </div>

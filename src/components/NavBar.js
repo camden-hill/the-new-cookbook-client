@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 import FontAwesome from 'react-fontawesome';
 import {withRouter} from 'react-router-dom';
 
+import logo from '../img/icons/Logo.png';
 import '../css/navbar.css';
 
 class NavBar extends Component {
@@ -31,7 +32,7 @@ class NavBar extends Component {
   render() {
     return (
       <div className="navbar">
-        <Link className="backLink" to={"/"}>Back</Link>
+        <Link className="homeLink" to={"/"}><img alt="logo" src={logo} /></Link>
         <FontAwesome name="search" className="icon" id="search" />
         <form onSubmit={this.handleSubmit}>
           <input type="text" className="inputSearch" value={this.state.value} onChange={this.handleChange} />

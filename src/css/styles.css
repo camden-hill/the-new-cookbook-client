@@ -105,9 +105,8 @@ input[type="text"] {
   margin-left: .5rem;
   border: none;
   border-bottom: solid 1px black;
-  width: 12rem;
   text-align: left;
-  font-size: 1rem;
+  font-size: .8rem;
   box-sizing: border-box;
 }
 
