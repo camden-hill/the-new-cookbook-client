@@ -18,6 +18,7 @@ class AddRecipe extends Component {
     this.state = {
       newIngredientText: PropTypes.string,
       newStepText: PropTypes.string,
+      currentTimeValue: PropTypes.string,
       ingredients: [
       ],
       steps: [
@@ -27,6 +28,7 @@ class AddRecipe extends Component {
 
   componentWillMount() {
     this.setInitialNewText();
+    this.currentTime();
   }
 
   setInitialNewText() {
@@ -47,6 +49,8 @@ class AddRecipe extends Component {
     })
   }
 
+  removeIngredient() {}
+
   addStep(newStep) {
     let steps = this.state.steps;
     const currentTime = moment().format()
@@ -61,6 +65,8 @@ class AddRecipe extends Component {
       this.setState({newStepText: ""});
     })
   }
+
+  removeStep() {}
 
   addRecipe(newRecipe) {
     axios.request({
@@ -101,14 +107,43 @@ class AddRecipe extends Component {
     }).catch(err => console.log(err));
   }
 
+  currentTime() {
+    setInterval(() => {
+      let date = new Date();
+      let hours = date.getHours()>12 ? date.getHours()-12 : date.getHours();
+      hours = hours===0 ? 12 : hours;
+      const minutes = date.getMinutes()<10 ? `0${date.getMinutes()}` : date.getMinutes();
+      let currentTimeValue = `${hours}:${minutes}`;
+      this.setState({currentTimeValue: currentTimeValue})
+    }, 1000)
+  }
+
   handleClick(e) {
-    switch (e.target.id) {
+    let eClass = e.target.className.split(" ")[e.target.className.split(" ").length-1];
+    let index;
+    switch (eClass) {
       case 'addIngredient':
         this.addIngredient(this.state.newIngredientText);
         break;
       case 'addStep':
         this.addStep(this.state.newStepText);
         break;
+        case 'removeIngredient':
+          index = e.target.id;
+          console.log(index);
+          let ingredients = this.state.ingredients;
+          console.log(ingredients);
+          let newIngredients = [...ingredients.slice(0, parseInt(index)), ...ingredients.slice(parseInt(index)+1, ingredients.length)];
+          console.log(ingredients);
+          this.setState({ingredients: newIngredients});
+          console.log(newIngredients);
+          // this.removeIngredient();
+          break;
+        case 'removeStep':
+          index = e.target.id;
+          this.removeStep();
+          console.log(e.target.id);
+          break;
       default:
         console.log('Other');
     }
@@ -185,21 +220,24 @@ class AddRecipe extends Component {
                 <ul>
                   {this.state.ingredients.map((ingredient, index) =>
                     <li key={index} className="ingredient">
-                      <p>{ingredient.name}</p><FontAwesome name="minus-circle" className="icon minusCircle" id="removeIngredient" onClick={this.handleClick} />
+                      <p>{ingredient.name}</p><FontAwesome name="minus-circle" className="icon minusCircle removeIngredient" id={index} onClick={this.handleClick} />
                     </li>
                   )}
-                  <li className="newIngredientLI"><input className="newIngredient" type="text" name="newIngredientText" id="newIngredientText" ref="newIngredientText" placeholder="Add Ingredient" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autoComplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle" id="addIngredient" onClick={this.handleClick} /></li>
+                  <li className="newIngredientLI"><input className="newIngredient" type="text" name="newIngredientText" id="newIngredientText" ref="newIngredientText" placeholder="Add Ingredient" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autoComplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle addIngredient" onClick={this.handleClick} /></li>
                 </ul>
               </div>
               <div className="stepBox">
+                <div className="stepHead addRecipe">
+                  <h6>Start cooking at {this.state.currentTimeValue}</h6>
+                </div>
                 <div className="steps">
                   <ul className="stepsText">
                     {this.state.steps.map((step, index) =>
                       <li key={index} className="step">
-                        <div className="stepText">{step.text}</div><FontAwesome name="minus-circle" className="icon minusCircle" id="removeIngredient" onClick={this.handleClick} />
+                        <div className="stepText">{step.text}</div><FontAwesome name="minus-circle" className="icon minusCircle removeStep" id={index} onClick={this.handleClick} />
                       </li>
                     )}
-                    <li className="row-basic"><input className="newStep" type="text" name="newStepText" id="newStepText" ref="newStepText" placeholder="Add Step" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autoComplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle" id="addStep" onClick={this.handleClick} /></li>
+                    <li className="row-basic"><input className="newStep" type="text" name="newStepText" id="newStepText" ref="newStepText" placeholder="Add Step" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autoComplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle addStep" onClick={this.handleClick} /></li>
                   </ul>
                 </div>
                 <div className="stepFooter">

@@ -32,7 +32,9 @@ class NavBar extends Component {
   render() {
     return (
       <div className="navbar">
-        <Link className="homeLink" to={"/"}><img alt="logo" src={logo} /></Link>
+        <div className="homeLink">
+          <Link to={"/"}><img alt="logo" src={logo} /></Link>
+        </div>
         <FontAwesome name="search" className="icon" id="search" />
         <form onSubmit={this.handleSubmit}>
           <input type="text" className="inputSearch" value={this.state.value} onChange={this.handleChange} />
