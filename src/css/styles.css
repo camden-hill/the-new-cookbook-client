@@ -71,6 +71,11 @@ li {
   flex: none;
 }
 
+.align-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .row {
   display: flex;
   justify-content: center;

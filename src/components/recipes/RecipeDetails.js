@@ -17,7 +17,9 @@ class RecipeDetails extends Component {
       steps: [],
       currentTimeValue: PropTypes.string,
       servingsCount: 1,
-      edit: false
+      edit: false,
+      range: 0,
+      endValue: 0
     }
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -42,8 +44,7 @@ class RecipeDetails extends Component {
 
   getRecipeIngredients() {
     let recipeId = this.props.match.params.id;
-    console.log(recipeId);
-    axios.get(`http://localhost:3000/api/ingredients?filter[where][recipeId]=${recipeId}`)
+    axios.get(`http://localhost:3000/api/ingredients?filter[where][recipeId][regexp]=${recipeId}`)
     // axios.get(`http://localhost:3000/api/ingredients`)
       .then(response => {
         this.setState({ingredients: response.data})
@@ -53,7 +54,7 @@ class RecipeDetails extends Component {
 
   getRecipeSteps() {
     let recipeId = this.props.match.params.id;
-    axios.get(`http://localhost:3000/api/steps?filter[where][recipeId]=${recipeId}`)
+    axios.get(`http://localhost:3000/api/steps?filter[where][recipeId][regexp]=${recipeId}`)
     // axios.get(`http://localhost:3000/api/steps`)
       .then(response => {
         this.setState({steps: response.data})
@@ -133,33 +134,55 @@ class RecipeDetails extends Component {
 
   currentTime() {
     setInterval(() => {
-      let date = new Date();
-      let hours = date.getHours()>12 ? date.getHours()-12 : date.getHours();
-      hours = hours===0 ? 12 : hours;
-      const minutes = date.getMinutes()<10 ? `0${date.getMinutes()}` : date.getMinutes();
-      let currentTimeValue = `${hours}:${minutes}`;
+      let currentTimeValue = String(moment().format("hh:mm"));
+      // let currentTimeValue = String(moment().add(5, 'minutes').format("hh:mm"));
       this.setState({currentTimeValue: currentTimeValue})
     }, 1000)
   }
 
   calculateOffsets() {
+    let range = 0;
+    let stepEnd = 0;
     this.state.steps.map((step) => {
-      console.log(step.startTime);
+      stepEnd = step.startTime + step.duration;
+      if (stepEnd > range) {
+        range = stepEnd;
+      }
     })
+    let roundFiveMinutes = 5 * Math.ceil(range / 5);
+    this.setState({range: range});
+    this.setState({endValue: String(moment().add(range, 'minutes').format("hh:mm"))});
   }
 
   render() {
-    let edit = !this.state.details.approved ? <button type="submit" name="editRecipe" className="submit edit" id="edit" form="editRecipe" onClick={this.handleClick}>Edit</button> : '';
-    let reject = !this.state.details.approved ? <button type="submit" name="rejectRecipe" className="submit reject" id="reject" form="rejectRecipe" onClick={this.handleClick}>Reject</button> : '';
-    let approve = !this.state.details.approved ? <button type="submit" name="approveRecipe" className="submit" id="approve" form="approveRecipe" onClick={this.handleClick}>Approve</button> : '';
+    let edit = <button type="submit" name="editRecipe" className="submit edit" id="edit" form="editRecipe" onClick={this.handleClick}>Edit</button>;
+    let reject = <button type="submit" name="rejectRecipe" className="submit reject" id="reject" form="rejectRecipe" onClick={this.handleClick}>Reject</button>;
+    let approve = <button type="submit" name="approveRecipe" className="submit" id="approve" form="approveRecipe" onClick={this.handleClick}>Approve</button>;
+
+    let head = !this.state.details.approved ? (
+      <div className="stepHead">
+        <form id="approveRecipe">
+          {edit}
+          {reject}
+          {approve}
+        </form>
+      </div>
+    ) : (
+      <div className="stepHead recipeDetails">
+        <h6>Start cooking at {this.state.currentTimeValue}</h6>
+        <h6><span className="align-right">Finish cooking at {this.state.endValue}</span></h6>
+      </div>
+    );
 
     let steps = !this.state.edit ? (
       <ul className="steps">
-        {this.state.steps.map((step) =>
+        {[].concat(this.state.steps)
+          .sort((a, b) => a.startTime > b.startTime)
+          .map((step, index) =>
           <li key={step.id} className="step">
-            <div className="stepInfo">
+            <div className="stepInfo" style={{marginLeft: 5*step.startTime+'rem', width: 5*step.duration+'rem'}}>
               <p>{step.text}</p>
-              <p className="stepDuration">{step.duration} minutes</p>
+              <p className="stepDuration">{String(moment().add(step.startTime, 'minutes').format("hh:mm"))} to {String(moment().add(step.startTime+step.duration, 'minutes').format("hh:mm"))}</p>
             </div>
           </li>
         )}
@@ -193,7 +216,6 @@ class RecipeDetails extends Component {
     return (
       <div>
         <NavBar />
-        <Link to={'/recipes/add'}>Add Recipe</Link>
         <div className="recipe">
           <h1>{this.state.details.name}</h1>
           <div className="row">
@@ -206,14 +228,7 @@ class RecipeDetails extends Component {
               {ingredients}
             </div>
             <div className="stepBox stepDetails">
-              <div className="stepHead">
-                <h6>Start cooking at <span className="underline">{this.state.currentTimeValue}</span></h6>
-                <form id="approveRecipe">
-                  {edit}
-                  {reject}
-                  {approve}
-                </form>
-              </div>
+              {head}
               {steps}
             </div>
           </div>
