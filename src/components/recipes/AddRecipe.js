@@ -16,7 +16,7 @@ class AddRecipe extends Component {
     this.handleClick = this.handleClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
     this.state = {
-      newIngredientText: PropTypes.string,
+      newIngredientName: PropTypes.string,
       newStepText: PropTypes.string,
       currentTimeValue: PropTypes.string,
       ingredients: [
@@ -33,7 +33,7 @@ class AddRecipe extends Component {
   }
 
   setInitialNewText() {
-    this.setState({newIngredientText: ""});
+    this.setState({newIngredientName: ""});
     this.setState({newStepText: ""});
   }
 
@@ -42,28 +42,53 @@ class AddRecipe extends Component {
     });
   }
 
+  /* Add an array of ingredients to this.state.ingredients */
   addIngredients(newIngredients) {
-    let ingredients = this.state.ingredients;
-    var ingredientNames = ingredients.map(ingredient => {
+    let newIngredientName;
+    let newIngredientQuantity = '';
+    let hasMeasure, ingredients;
+    let measures = ['cup','teaspoon','tablespoon','pinch','pound','oz','can','bottle'];
+
+    // Get the list of names of the ingredients to verify that the ingredient does not already exist in this.state.ingredients
+    let ingredientNames = this.state.ingredients.map(ingredient => {
       return ingredient['name'];
     })
-    console.log(ingredientNames);
+    // For each of the ingredients to add, check if this.state.ingredients already lists that ingredient
     newIngredients.forEach(newIngredient => {
+      hasMeasure = 0;
       if (!ingredientNames.includes(newIngredient)) {
-        ingredients = [...ingredients, {
-          "name": newIngredient,
-          "quantity": "10",
+        // Check if the ingredient text has a measurement; if so, split the text into quantity, and ingredient name
+        for (var i = 0; i < measures.length; i++) {
+          if (newIngredient.includes(measures[i])) {
+            console.log(newIngredient);
+            [newIngredientQuantity, newIngredientName] = newIngredient.split(` ${measures[i]} `);
+            newIngredientQuantity += ` ${measures[i]}`;
+            hasMeasure = 1;
+            break;
+          }
+        };
+
+        if (!hasMeasure) {
+          console.log(newIngredient);
+          newIngredientName = newIngredient;
+          newIngredientQuantity = "";
+        }
+
+        ingredients = [...this.state.ingredients, {
+          "name": newIngredientName,
+          "quantity": newIngredientQuantity,
           "createdDate": moment()
         }]
       }
     })
     console.log(ingredients);
     this.setState({ingredients: ingredients}, () => {
-      this.refs.newIngredientText.value = "";
-      this.setState({newIngredientText: ""});
+      this.refs.newIngredientName.value = "";
+      this.setState({newIngredientName: ""});
     })
   }
 
+  /* Add a step to this.state.steps */
   addStep(newStep) {
     let steps = this.state.steps;
     const currentTime = moment().format();
@@ -76,7 +101,9 @@ class AddRecipe extends Component {
         }
       })
     })
-    this.addIngredients(newIngredients);
+    if (newIngredients.length != 0) {
+      this.addIngredients(newIngredients);
+    }
     steps = [...steps, {
       "text": newStep,
       "startTime": 0,
@@ -144,7 +171,7 @@ class AddRecipe extends Component {
     let index;
     switch (eClass) {
       case 'addIngredients':
-        this.addIngredients(this.state.newIngredientText);
+        this.addIngredients(this.state.newIngredientName);
         break;
       case 'addStep':
         this.addStep(this.state.newStepText);
@@ -192,10 +219,10 @@ class AddRecipe extends Component {
   onKeyDown(e) {
     if (e.keyCode === 9) {
       switch (e.target.id) {
-        case 'newIngredientText':
-          if (this.state.newIngredientText !== "") {
+        case 'newIngredientName':
+          if (this.state.newIngredientName !== "") {
             e.preventDefault();
-            this.addIngredients([this.state.newIngredientText]);
+            this.addIngredients([this.state.newIngredientName]);
           }
           break;
         case 'newStepText':
@@ -231,20 +258,20 @@ class AddRecipe extends Component {
               <h3>How many people does this recipe serve?</h3>
               <input type="text" className="servingsCount" id="servingsCount" name="servingsCount" ref="servingsCount" onChange={this.handleInputChange} autoComplete="off" />
             </div>
-            <div className="recipe-container">
+            <div className="container recipe-container">
               <div className="ingredientBox">
-                <h4>Ingredients</h4>
+                <h4 className="ingredients">Ingredients</h4>
                 <ul>
                   {this.state.ingredients.map((ingredient, index) =>
                     <li key={index} className="ingredient">
-                      <p>{ingredient.name}</p><FontAwesome name="minus-circle" className="icon minusCircle removeIngredient" id={index} onClick={this.handleClick} />
+                      <p><strong>{ingredient.quantity}</strong> {ingredient.name}</p><FontAwesome name="minus-circle" className="icon minusCircle removeIngredient" id={index} onClick={this.handleClick} />
                     </li>
                   )}
-                  <li className="newIngredientLI"><input className="newIngredient" type="text" name="newIngredientText" id="newIngredientText" ref="newIngredientText" placeholder="Add Ingredient" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autoComplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle addIngredient" onClick={this.handleClick} /></li>
+                  <li className="newIngredientLI"><input className="newIngredient" type="text" name="newIngredientName" id="newIngredientName" ref="newIngredientName" placeholder="Add Ingredient" onChange={this.handleInputChange} onKeyDown={this.onKeyDown} autoComplete="off" /><FontAwesome name="plus-circle" className="icon plusCircle addIngredient" onClick={this.handleClick} /></li>
                 </ul>
               </div>
               <div className="stepBox">
-                <div className="stepHead addRecipe">
+                <div className="subStepHead">
                   <h6>Start cooking at {this.state.currentTimeValue}</h6>
                 </div>
                 <div className="steps">

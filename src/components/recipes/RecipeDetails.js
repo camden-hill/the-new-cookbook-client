@@ -5,6 +5,7 @@ import {Link} from 'react-router-dom';
 import NavBar from '../NavBar';
 import Footer from '../Footer';
 import moment from 'moment';
+import FontAwesome from 'react-fontawesome';
 
 import '../../css/recipes.css';
 
@@ -16,10 +17,12 @@ class RecipeDetails extends Component {
       ingredients: [],
       steps: [],
       currentTimeValue: PropTypes.string,
+      originalServingsCount: 1,
       servingsCount: 1,
       edit: false,
       range: 0,
-      endValue: 0
+      endValue: 0,
+      trackerWidth: 0,
     }
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -32,12 +35,16 @@ class RecipeDetails extends Component {
     this.currentTime();
   }
 
+  componentDidUpdate() {
+  }
+
   getRecipe() {
     let recipeId = this.props.match.params.id;
     axios.get(`http://localhost:3000/api/recipes/${recipeId}`)
       .then(response => {
         this.setState({details: response.data});
         this.setState({servingsCount: response.data.servings});
+        this.setState({originalServingsCount: response.data.servings});
       })
       .catch(err => console.log(err));
   }
@@ -55,7 +62,6 @@ class RecipeDetails extends Component {
   getRecipeSteps() {
     let recipeId = this.props.match.params.id;
     axios.get(`http://localhost:3000/api/steps?filter[where][recipeId][regexp]=${recipeId}`)
-    // axios.get(`http://localhost:3000/api/steps`)
       .then(response => {
         this.setState({steps: response.data})
         this.calculateOffsets();
@@ -78,10 +84,12 @@ class RecipeDetails extends Component {
 
     this.setState({
       [name]: value
-    });
+    })
+    this.multiplyIngredientQuantities();
   }
 
   handleClick(e) {
+    let interval;
     e.preventDefault();
     switch(e.target.id) {
       case 'edit':
@@ -117,8 +125,23 @@ class RecipeDetails extends Component {
         // this.approveRecipe(approvedRecipe);
         break;
 
+      case 'start':
+        this.setState({interval: setInterval(() => {
+            this.setState({trackerWidth: this.state.trackerWidth+.1});
+          }, 1200)
+        })
+        break;
+
+      case 'stop':
+        clearInterval(this.state.interval);
+        break;
+
+      case 'camera':
+        console.log('camera');
+        break;
+
       default:
-        console.log(e.target.value);
+        this.multiplyIngredientQuantities();
     }
   }
 
@@ -154,10 +177,35 @@ class RecipeDetails extends Component {
     this.setState({endValue: String(moment().add(range, 'minutes').format("hh:mm"))});
   }
 
+  multiplyIngredientQuantities() {
+    let newIngredientQuantities = [];
+    let originalQuantity = 0;
+    let newQuantity = 0;
+    let measures = ['cup','teaspoon','tablespoon','pinch','pound','oz','can','bottle'];
+
+    this.state.ingredients.map(ingredient => {
+      for (var i = 0; i < measures.length; i++) {
+        if (ingredient.quantity.split(" ").includes(measures[i])) {
+          newQuantity = ingredient.quantity.split(measures[i]);
+          newQuantity = eval(newQuantity[0].split(" ")[0]) * parseInt(this.state.servingsCount) / parseInt(this.state.originalServingsCount) + ` ${measures[i]}`;
+          break;
+        }
+      }
+      newIngredientQuantities.push({
+        "name": ingredient.name,
+        "quantity": newQuantity,
+        "createdDate": moment()
+      })
+    });
+  }
+
   render() {
     let edit = <button type="submit" name="editRecipe" className="submit edit" id="edit" form="editRecipe" onClick={this.handleClick}>Edit</button>;
     let reject = <button type="submit" name="rejectRecipe" className="submit reject" id="reject" form="rejectRecipe" onClick={this.handleClick}>Reject</button>;
     let approve = <button type="submit" name="approveRecipe" className="submit" id="approve" form="approveRecipe" onClick={this.handleClick}>Approve</button>;
+
+    let start = <button type="submit" name="start" className="submit leftButton" id="start" form="start" onClick={this.handleClick}>Start</button>
+    let stop = <button type="submit" name="stop" className="submit leftButton stop" id="stop" form="stop" onClick={this.handleClick}>Stop</button>
 
     let head = !this.state.details.approved ? (
       <div className="stepHead">
@@ -168,9 +216,15 @@ class RecipeDetails extends Component {
         </form>
       </div>
     ) : (
-      <div className="stepHead recipeDetails">
-        <h6>Start cooking at {this.state.currentTimeValue}</h6>
-        <h6><span className="align-right">Finish cooking at {this.state.endValue}</span></h6>
+      <div>
+        <div className="stepHead">
+          {start}
+          {stop}
+        </div>
+        <div className="subStepHead">
+          <h6>Start cooking at {this.state.currentTimeValue}</h6>
+          <h6 className="align-right">Finish cooking at {this.state.endValue}</h6>
+        </div>
       </div>
     );
 
@@ -186,6 +240,7 @@ class RecipeDetails extends Component {
             </div>
           </li>
         )}
+        <div className="tracker" style={{width: this.state.trackerWidth+'rem'}}></div>
       </ul>
     ) : (
       <ul className="steps">
@@ -214,20 +269,23 @@ class RecipeDetails extends Component {
     )
 
     return (
-      <div>
+      <div onClick={this.handleClick}>
         <NavBar />
         <div className="recipe">
           <h1>{this.state.details.name}</h1>
           <div className="row">
             <h3>How many people do you want to serve?</h3>
-            <input type="text" className="servingsCount" name="servingsCount" placeholder={this.state.servingsCount} onChange={this.handleInputChange} />
+            <input type="text" className="servingsCount" name="servingsCount" maxLength="2" placeholder={this.state.servingsCount} onChange={this.handleInputChange} />
           </div>
-          <div className="recipe-container">
+          <div className="container row justify-right">
+            <FontAwesome name="camera" className="icon" id="camera" onClick={this.handleClick} />
+          </div>
+          <div className="container recipe-container">
             <div className="ingredientBox">
-              <h4>Ingredients</h4>
+              <h4 className="ingredients">Ingredients</h4>
               {ingredients}
             </div>
-            <div className="stepBox stepDetails">
+            <div id="stepBox" className="stepBox stepDetails">
               {head}
               {steps}
             </div>

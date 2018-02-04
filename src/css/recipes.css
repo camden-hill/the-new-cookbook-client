@@ -1,21 +1,27 @@
+/* Recipe top-level */
 .recipe {
   margin-top: 2rem;
 }
 
-.recipe-container {
+.container {
+  width: 80%;
+  display: flex;
+  margin: .5rem auto;
+  flex-direction: row;
+}
+
+.container.recipe-container {
   width: 80%;
   min-width: 30rem;
   height: 36rem;
-  display: flex;
-  margin: auto;
-  flex-direction: row;
   justify-content: center;
   background: white;
   border: solid 1px black;
-  margin-top: 2rem;
+  /* margin-top: 2rem; */
   border-radius: .1rem;
 }
 
+/* Ingredients */
 .ingredientBox, .stepBox {
   box-sizing: border-box;
 }
@@ -26,15 +32,21 @@
   flex: 1 0 0;
   flex-direction: column;
   overflow: scroll;
-  /* background: #FFF0CA; */
   border: solid 1px black;
   padding: 2rem 1rem;
 }
 
 .ingredientBox li {
   font-size: .8rem;
+  margin: 1rem 0;
 }
 
+h4.ingredients {
+  border-bottom: solid 1px black;
+  width: 100%;
+}
+
+/* Steps */
 .stepBox {
   height: 100%;
   display: flex;
@@ -50,7 +62,7 @@
 }
 
 .stepHead {
-  background: #eee;
+  background: #F0F0F4;
   width: 100%;
   height: 3rem;
   border-bottom: solid 1px black;
@@ -59,17 +71,23 @@
   justify-content: flex-start;
   box-sizing: border-box;
   padding: 0 .5rem;
+  z-index: 1;
 }
 
-.stepHead.recipeDetails {
+.subStepHead {
+  background: #D0D0D4;
+  width: 100%;
   height: 1.5rem;
+  border-bottom: solid 1px black;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 0 .5rem;
+  z-index: 1;
 }
 
-.stepHead.addRecipe {
-  height: 1.5rem;
-}
-
-.stepHead h6 {
+.subStepHead h6 {
   flex: 1 0 auto;
 }
 
@@ -86,12 +104,11 @@
   padding: .5rem;
 }
 
-li.step.newStep {
-  margin: .25rem 0;
-}
-
+/* Individual step */
 li.step {
-  display: flex;
+  margin: .25rem 0;
+  z-index: 1;
+  display: block;
   align-items: center;
 }
 
@@ -99,20 +116,23 @@ li.step:last-of-type {
   padding: 0 1rem 1rem 0;
 }
 
-li.step:first-of-type {
-  margin-top: 1rem;
+li.step.newStep {
+  margin: .25rem 0;
+  display: flex;
 }
 
 .stepInfo {
   font-size: .8rem;
-  border: solid 1px black !important;
+  border: solid 1px #ccc !important;
   border-radius: .25rem;
   border-radius: 10rem;
   border-radius: .1rem;
   border-radius: 0rem;
-  /* box-shadow: 1px 1px 2px #ccc; */
+  box-shadow: 1px 1px 2px #ccc;
   padding: .25rem .5rem;
   box-sizing: border-box;
+  z-index: 1;
+  background: white;
 }
 
 .stepsText {
@@ -131,9 +151,14 @@ li.step:first-of-type {
   font-size: .7rem;
 }
 
-h4 {
-  border-bottom: solid 1px black;
-  width: 100%;
+/* Tracker line */
+.tracker {
+  height: 1000rem;
+  margin-top: -100rem;
+  background: none;
+  border-right: solid 1px #1B8CCF;
+  z-index: 0;
+  position: relative;
 }
 
 .servingsCount {
@@ -176,10 +201,15 @@ input.newStep {
 div.newStepDiv {
 }
 
-.ingredient {
+li.ingredient {
   display: flex;
-  margin-left: .5rem;
   font-size: .8rem;
+}
+
+.ingredientI {
+  /* padding: 0 !important; */
+  margin: 0 !important;
+  width: 100%;
 }
 
 .ingredient p {
@@ -237,13 +267,18 @@ button {
   margin-left: .5rem;
 }
 
-.edit {
+button.edit {
   background: white;
   color: black;
 }
 
-.reject {
+button.reject {
   background: #E84B6E;
+}
+
+button.stop {
+  color: #E84B6E;
+  background: white;
 }
 
 .editStep {
