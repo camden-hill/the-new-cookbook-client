@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import FontAwesome from 'react-fontawesome';
 import {withRouter} from 'react-router-dom';
 
-import logo from '../img/icons/Logo.png';
+import logo from '../img/logos/TNC3.svg';
 import '../css/navbar.css';
 
 class NavBar extends Component {
